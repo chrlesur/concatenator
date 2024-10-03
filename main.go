@@ -6,12 +6,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "1.0.0"
+const VERSION = "1.0.1"
 
 type FileInfo struct {
 	Name    string    `json:"name"`
@@ -24,6 +25,7 @@ type FileInfo struct {
 var (
 	inputDir  string
 	recursive bool
+	exclude   string
 	rootCmd   = &cobra.Command{
 		Use:   "concatenator",
 		Short: "A tool to concatenate file information into a JSON file",
@@ -48,14 +50,30 @@ var (
 func init() {
 	concatenateCmd.Flags().StringVarP(&inputDir, "dir", "d", ".", "Input directory")
 	concatenateCmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "Traverse directory recursively")
+	concatenateCmd.Flags().StringVarP(&exclude, "exclude", "e", "", "Exclude files matching pattern (comma-separated, supports wildcards)")
 	concatenateCmd.Flags().Lookup("recursive").NoOptDefVal = "true"
 	rootCmd.AddCommand(concatenateCmd, versionCmd)
+}
+
+func matchesExcludePattern(path string, patterns []string) bool {
+	for _, pattern := range patterns {
+		matched, err := filepath.Match(pattern, filepath.Base(path))
+		if err == nil && matched {
+			return true
+		}
+	}
+	return false
 }
 
 func run(cmd *cobra.Command, args []string) {
 	outputFile := "output.json"
 	if len(args) > 0 {
 		outputFile = args[0]
+	}
+
+	excludePatterns := strings.Split(exclude, ",")
+	for i, pattern := range excludePatterns {
+		excludePatterns[i] = strings.TrimSpace(pattern)
 	}
 
 	var files []FileInfo
@@ -69,6 +87,10 @@ func run(cmd *cobra.Command, args []string) {
 		}
 
 		if info.IsDir() {
+			return nil
+		}
+
+		if matchesExcludePattern(path, excludePatterns) {
 			return nil
 		}
 
