@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const VERSION = "1.0.1"
+const VERSION = "1.0.2"
 
 type FileInfo struct {
 	Name    string    `json:"name"`
@@ -26,6 +26,7 @@ var (
 	inputDir  string
 	recursive bool
 	exclude   string
+	include   string
 	rootCmd   = &cobra.Command{
 		Use:   "concatenator",
 		Short: "A tool to concatenate file information into a JSON file",
@@ -51,11 +52,12 @@ func init() {
 	concatenateCmd.Flags().StringVarP(&inputDir, "dir", "d", ".", "Input directory")
 	concatenateCmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "Traverse directory recursively")
 	concatenateCmd.Flags().StringVarP(&exclude, "exclude", "e", "", "Exclude files matching pattern (comma-separated, supports wildcards)")
+	concatenateCmd.Flags().StringVarP(&include, "include", "i", "", "Include only files matching pattern (comma-separated, supports wildcards)")
 	concatenateCmd.Flags().Lookup("recursive").NoOptDefVal = "true"
 	rootCmd.AddCommand(concatenateCmd, versionCmd)
 }
 
-func matchesExcludePattern(path string, patterns []string) bool {
+func matchesPattern(path string, patterns []string) bool {
 	for _, pattern := range patterns {
 		matched, err := filepath.Match(pattern, filepath.Base(path))
 		if err == nil && matched {
@@ -72,8 +74,12 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	excludePatterns := strings.Split(exclude, ",")
+	includePatterns := strings.Split(include, ",")
 	for i, pattern := range excludePatterns {
 		excludePatterns[i] = strings.TrimSpace(pattern)
+	}
+	for i, pattern := range includePatterns {
+		includePatterns[i] = strings.TrimSpace(pattern)
 	}
 
 	var files []FileInfo
@@ -90,7 +96,11 @@ func run(cmd *cobra.Command, args []string) {
 			return nil
 		}
 
-		if matchesExcludePattern(path, excludePatterns) {
+		if len(includePatterns) > 0 && !matchesPattern(path, includePatterns) {
+			return nil
+		}
+
+		if matchesPattern(path, excludePatterns) {
 			return nil
 		}
 

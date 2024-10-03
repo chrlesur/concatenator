@@ -8,6 +8,7 @@ Concatenator est un outil CLI qui parcourt un répertoire, collecte les informat
 - Collecte d'informations sur les fichiers (nom, contenu, taille, date de modification, chemin)
 - Génération d'un fichier JSON structuré
 - Exclusion de fichiers basée sur des motifs (wildcards)
+- Inclusion sélective de fichiers basée sur des motifs (wildcards)
 
 ## Installation
 
@@ -27,6 +28,7 @@ Options :
 - `--dir`, `-d` : Répertoire d'entrée (par défaut : répertoire courant)
 - `--recursive`, `-r` : Parcourir le répertoire de manière récursive
 - `--exclude`, `-e` : Exclure des fichiers basés sur des motifs (supporte les wildcards)
+- `--include`, `-i` : Inclure uniquement les fichiers correspondant aux motifs (supporte les wildcards)
 
 Pour afficher la version :
 
@@ -36,16 +38,16 @@ concatenator version
 
 ## Exemples
 
-Générer un fichier JSON en excluant les fichiers .exe :
+Générer un fichier JSON en incluant uniquement les fichiers .txt et .log :
 
 ```bash
-concatenator concatenate --dir=/chemin/vers/dossier --recursive --exclude="*.exe" output.json
+concatenator concatenate --dir=/chemin/vers/dossier --recursive --include="*.txt,*.log" output.json
 ```
 
-Exclure plusieurs types de fichiers :
+Inclure certains fichiers mais exclure les fichiers .tmp :
 
 ```bash
-concatenator concatenate --dir=/chemin/vers/dossier --recursive --exclude="*.exe,*.dll,*.tmp" output.json
+concatenator concatenate --dir=/chemin/vers/dossier --recursive --include="*.txt,*.log" --exclude="*.tmp" output.json
 ```
 
 ## Développement
@@ -72,5 +74,3 @@ Ce projet est sous licence [GNU General Public License v3.0](https://www.gnu.org
 ## Auteur
 
 [chrlesur](https://github.com/chrlesur)
-```
-
